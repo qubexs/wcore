@@ -1,0 +1,25 @@
+[
+  {
+    "title": "Infographic",
+    "route": "infographic.index",
+    "icon": "fas fa-chart-pie",
+    "permission": "infographic.view",
+    "order": 1,
+    "children": [
+      {
+        "title": "Create Infographic",
+        "route": "infographic.create",
+        "icon": "fas fa-plus-circle",
+        "permission": "infographic.create",
+        "order": 1
+      },
+      {
+        "title": "All Infographics",
+        "route": "infographic.index",
+        "icon": "fas fa-images",
+        "permission": "infographic.view",
+        "order": 2
+      }
+    ]
+  }
+]

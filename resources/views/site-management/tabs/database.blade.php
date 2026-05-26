@@ -1,0 +1,3 @@
+@php
+    $backups = $backups ?? [];
+@endphp

@@ -1,0 +1,265 @@
+<?php
+
+/**
+ * Activity Logging Helper Functions
+ * 
+ * Add this to your app/helpers.php or create app/Helpers/ActivityLog.php
+ * Then add to composer.json autoload:
+ *   "files": [
+ *       "app/Helpers/ActivityLog.php"
+ *   ]
+ */
+/** app\Helpers\ActivityLog.php **/
+
+
+use App\Services\ActivityLogService;
+use App\Models\ActivityLog;
+   
+
+/**
+ * Log an activity
+ * 
+ * @param string $actionType
+ * @param string $description
+ * @param mixed $metadata
+ * @param string $status
+ * @return \App\Models\UserActivityLog
+ * 
+ * Usage:
+ *   logActivity('user_created', 'Created user John', $user);
+ *   logActivity('file_uploaded', 'Uploaded document.pdf', ['size' => 1024]);
+ */
+if (!function_exists('logActivity')) {
+    function logActivity(string $actionType, string $description, $metadata = null, string $status = 'success')
+    {
+        return ActivityLogService::log($actionType, $description, $metadata, $status);
+    }
+}
+
+/**
+ * Log successful activity
+ * 
+ * @param string $actionType
+ * @param string $description
+ * @param mixed $metadata
+ * @return \App\Models\UserActivityLog
+ * 
+ * Usage:
+ *   logSuccess('user_created', 'User created successfully', $user);
+ */
+if (!function_exists('logSuccess')) {
+    function logSuccess(string $actionType, string $description, $metadata = null)
+    {
+        return ActivityLogService::success($actionType, $description, $metadata);
+    }
+}
+
+/**
+ * Log failed activity
+ * 
+ * @param string $actionType
+ * @param string $description
+ * @param mixed $metadata
+ * @return \App\Models\UserActivityLog
+ * 
+ * Usage:
+ *   logError('user_create_failed', 'Failed to create user', ['error' => $e->getMessage()]);
+ */
+if (!function_exists('logError')) {
+    function logError(string $actionType, string $description, $metadata = null)
+    {
+        return ActivityLogService::error($actionType, $description, $metadata);
+    }
+}
+
+/**
+ * Log user created
+ * 
+ * Usage:
+ *   logUserCreated($user);
+ */
+if (!function_exists('logUserCreated')) {
+    function logUserCreated($user)
+    {
+        return ActivityLogService::userCreated($user);
+    }
+}
+
+/**
+ * Log user updated
+ * 
+ * Usage:
+ *   logUserUpdated($user, ['name' => 'John', 'email' => 'john@example.com']);
+ */
+if (!function_exists('logUserUpdated')) {
+    function logUserUpdated($user, array $changes = [])
+    {
+        return ActivityLogService::userUpdated($user, $changes);
+    }
+}
+
+/**
+ * Log user deleted
+ * 
+ * Usage:
+ *   logUserDeleted($user);
+ */
+if (!function_exists('logUserDeleted')) {
+    function logUserDeleted($user)
+    {
+        return ActivityLogService::userDeleted($user);
+    }
+}
+
+/**
+ * Log user status changed
+ * 
+ * Usage:
+ *   logUserStatusChanged($user, 'active', 'inactive');
+ */
+if (!function_exists('logUserStatusChanged')) {
+    function logUserStatusChanged($user, string $oldStatus, string $newStatus)
+    {
+        return ActivityLogService::userStatusChanged($user, $oldStatus, $newStatus);
+    }
+}
+
+/**
+ * Log database backup
+ * 
+ * Usage:
+ *   logDatabaseBackup('backup_20260305.sql', 1024000);
+ */
+if (!function_exists('logDatabaseBackup')) {
+
+    function logDatabaseBackup($filename, $fileSize)
+    {
+        ActivityLog::create([
+            'type' => 'database_backup',
+            'description' => 'Database backup created',
+            'meta' => json_encode([
+                'filename' => $filename,
+                'size' => $fileSize
+            ]),
+            'user_id' => auth()->id()
+        ]);
+    }
+
+}
+
+/**
+ * Log database restore
+ * 
+ * Usage:
+ *   logDatabaseRestore('backup_20260305.sql', true);
+ */
+if (!function_exists('logDatabaseRestore')) {
+    function logDatabaseRestore($filename, $success = true)
+    {
+        return ActivityLogService::databaseRestore($filename, $success);
+    }
+}
+
+/**
+ * Log website backup
+ * 
+ * Usage:
+ *   logWebsiteBackup('backup_20260305.zip', 5242880);
+ */
+if (!function_exists('logWebsiteBackup')) {
+    function logWebsiteBackup($filename, $size = null)
+    {
+        return ActivityLogService::websiteBackup($filename, $size);
+    }
+}
+
+/**
+ * Log file uploaded
+ * 
+ * Usage:
+ *   logFileUploaded('document.pdf', 2048, 'pdf');
+ */
+if (!function_exists('logFileUploaded')) {
+    function logFileUploaded($filename, $size = null, $filetype = null)
+    {
+        return ActivityLogService::fileUploaded($filename, $size, $filetype);
+    }
+}
+
+/**
+ * Log file deleted
+ * 
+ * Usage:
+ *   logFileDeleted('document.pdf');
+ */
+if (!function_exists('logFileDeleted')) {
+    function logFileDeleted($filename)
+    {
+        return ActivityLogService::fileDeleted($filename);
+    }
+}
+
+/**
+ * Log role created
+ * 
+ * Usage:
+ *   logRoleCreated($role, $permissionIds);
+ */
+if (!function_exists('logRoleCreated')) {
+    function logRoleCreated($role, $permissions = [])
+    {
+        return ActivityLogService::roleCreated($role, $permissions);
+    }
+}
+
+/**
+ * Log role updated
+ * 
+ * Usage:
+ *   logRoleUpdated($role, $permissionIds);
+ */
+if (!function_exists('logRoleUpdated')) {
+    function logRoleUpdated($role, $permissions = [])
+    {
+        return ActivityLogService::roleUpdated($role, $permissions);
+    }
+}
+
+/**
+ * Log role deleted
+ * 
+ * Usage:
+ *   logRoleDeleted('Manager');
+ */
+if (!function_exists('logRoleDeleted')) {
+    function logRoleDeleted($roleName)
+    {
+        return ActivityLogService::roleDeleted($roleName);
+    }
+}
+
+/**
+ * Log settings changed
+ * 
+ * Usage:
+ *   logSettingsChanged('app_name', 'Old App', 'New App');
+ */
+if (!function_exists('logSettingsChanged')) {
+    function logSettingsChanged($setting, $oldValue, $newValue)
+    {
+        return ActivityLogService::settingsChanged($setting, $oldValue, $newValue);
+    }
+}
+
+/**
+ * Get activity log service
+ * 
+ * Usage:
+ *   activity()->log('custom_action', 'Description', $data);
+ */
+if (!function_exists('activity')) {
+    function activity()
+    {
+        return app(ActivityLogService::class);
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Document Hosting",
+  "slug": "filehosting",
+  "version": "1.0.1",
+  "description": "Hosting module with RBAC and thumbnail previews",
+  "author": "ICT1980"
+}

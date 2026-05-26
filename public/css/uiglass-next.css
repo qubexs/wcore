@@ -1,0 +1,174 @@
+/* ================================
+uiglass-next.css
+================================ */
+
+/* ==============================
+   ROOT THEME VARIABLES
+============================== */
+:root {
+    --bg-gradient: linear-gradient(120deg, rgba(255,255,255,0.08), rgba(245,245,245,0.08));
+    --text-main: #111;
+    --text-soft: rgba(0,0,0,0.6);
+    --glass-bg: rgba(255,255,255,0.18);
+    --glass-border: rgba(255,255,255,0.25);
+    --glass-shadow: rgba(0,0,0,0.15);
+}
+
+body.dark {
+    --bg-gradient: linear-gradient(120deg,#111,#222,#333);
+    --text-main:#fff;
+    --text-soft: rgba(255,255,255,0.7);
+    --glass-bg: rgba(0,0,0,0.25);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-shadow: rgba(0,0,0,0.25);
+}
+
+body.light {
+    --bg-gradient: linear-gradient(to right, #f0f4ff,#dce6ff,#c8d7ff);
+    --text-main:#1a1a1a;
+    --text-soft: rgba(0,0,0,0.6);
+}
+
+/* ==============================
+   BASE
+============================== */
+body {
+    margin:0; padding:0; font-family:'Inter',sans-serif;
+    background: var(--bg-gradient); color: var(--text-main);
+}
+* { box-sizing:border-box; }
+a { text-decoration:none; color:inherit; }
+
+/* ==============================
+   GLASS COMPONENTS
+============================== */
+.glass-sidebar, .glass-topbar, .card, .avatar-menu {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border:1px solid var(--glass-border);
+    box-shadow:0 12px 36px var(--glass-shadow);
+    border-radius:12px;
+    transition: transform 0.35s cubic-bezier(.2,1.1,.4,1.0);
+}
+
+/* ==============================
+   SIDEBAR DOCK (LEFT, BELOW TOPBAR)
+============================== */
+.glass-sidebar {
+    position: fixed;
+    top: 80px; /* below topbar */
+    left: 0;
+    width: 220px;
+    padding:1rem;
+    display:flex;
+    flex-direction:column;
+    z-index:1200;
+    border-radius:12px 0 0 12px;
+    transform: translateX(0);
+    transition: transform 0.6s cubic-bezier(0.25,1.25,0.5,1); /* spring physics */
+}
+
+.glass-sidebar.collapsed {
+    transform: translateX(-180px); /* keeps hamburger visible */
+}
+
+/* Hamburger button always visible */
+.sidebar-header {
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+}
+.topbar-btn {
+    font-size:1.5rem;
+    cursor:pointer;
+    background:none;
+    border:none;
+    color: var(--text-main);
+    z-index:1300;
+}
+
+/* ==============================
+   MENU ITEMS
+============================== */
+.menu-item {
+    padding:0.7rem;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    cursor:pointer;
+    margin-top:0.3rem;
+}
+.menu-item.active { background: rgba(255,255,255,0.25); }
+.menu-item:hover { background: rgba(255,255,255,0.18); }
+
+/* Parent with submenu */
+.menu-item.parent .parent-btn {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0.5rem 1rem;
+    border-radius:8px;
+    background: rgba(255,255,255,0.15);
+    cursor:pointer;
+    transition: 0.3s;
+}
+.menu-item.parent .parent-btn:hover { background: rgba(255,255,255,0.25); }
+
+.submenu {
+    max-height:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    gap:0.3rem;
+    margin-left:1rem;
+    transition: max-height 0.35s cubic-bezier(.25,1.25,.5,1);
+}
+.submenu.open { max-height:500px; }
+
+.submenu-item {
+    padding:0.4rem 1rem;
+    border-radius:6px;
+}
+.submenu-item:hover, .submenu-item.active { background: rgba(255,255,255,0.25); }
+
+/* ==============================
+   MAIN WRAPPER
+============================== */
+.glass-main-wrapper {
+    margin-left:220px;
+    padding:1rem;
+    transition: margin-left 0.6s cubic-bezier(0.25,1.25,0.5,1);
+}
+
+/* ==============================
+   MOBILE
+============================== */
+@media(max-width:768px){
+    .glass-sidebar { top:0; width:220px; transform: translateX(-180px); }
+    .glass-main-wrapper{margin-left:0;}
+}
+
+
+/* Hamburger always visible */
+#hamburger-btn {
+    position: fixed;       /* fixed to viewport */
+    top: 20px;             /* below topbar */
+    left: 20px;            /* same as sidebar left */
+    font-size: 1.8rem;
+    cursor: pointer;
+    background: var(--glass-bg);
+    border:1px solid var(--glass-border);
+    border-radius:50%;
+    padding:0.3rem 0.6rem;
+    z-index:1500;          /* above everything */
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    transition: transform 0.35s cubic-bezier(.25,1.25,.5,1);
+}
+
+/* When sidebar collapses, hamburger stays */
+.glass-sidebar.collapsed + #hamburger-btn {
+    left: 20px;   /* stays at same position */
+}

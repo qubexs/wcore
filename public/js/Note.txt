@@ -1,0 +1,3 @@
+<a class="menu-item" data-title="{{ $menu->title }}">
+
+<a class="child-link" data-title="{{ $child->title }}">

@@ -1,0 +1,23 @@
+{
+  "name": "Intranet File Hosting Module",
+  "slug": "filehosting",
+  "version": "1.1.0",
+  "description": "Advanced file hosting with nested folder hierarchy, RBAC, file versioning, thumbnails, and audit trails",
+  "author": "ICT1980",
+   "routes": true,
+ "installer": "install.php",
+ "uninstaller": "uninstall.php",
+  "features": [
+    "nested_folders",
+    "file_versioning",
+    "thumbnail_previews",
+    "granular_permissions",
+    "audit_logging",
+    "soft_deletes"
+  ],
+  "dependencies": {
+    "php": ">=8.0",
+    "laravel": ">=9.0",
+    "extensions": ["gd", "imagick"]
+  }
+}

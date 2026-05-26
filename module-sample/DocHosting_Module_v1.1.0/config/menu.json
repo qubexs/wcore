@@ -1,0 +1,25 @@
+[
+  {
+    "title": "File Hosting",
+    "route": "filehosting.index",
+    "icon": "fas fa-cloud-upload-alt",
+    "permission": "filehosting.index",
+    "order": 1,
+    "children": [
+      {
+        "title": "Upload File",
+        "route": "filehosting.upload",
+        "icon": "fas fa-upload",
+        "permission": "filehosting.upload",
+        "order": 1
+      },
+      {
+        "title": "All Files",
+        "route": "filehosting.all",
+        "icon": "fas fa-file",
+        "permission": "filehosting.view",
+        "order": 2
+      }
+    ]
+  }
+]

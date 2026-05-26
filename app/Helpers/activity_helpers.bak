@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * 
+ * app\Helpers\activity_helpers.php
+ * 
+ * Activity Logging Helpers
+ * 
+ * These helper functions provide a simple interface for logging user activities
+ * throughout the application. They utilize the ActivityLogService to create
+ * detailed logs with consistent formatting.
+ * 
+ * Usage:
+ *   logActivity('user_created', 'Created user John Doe', $user);
+ *   logSuccess('backup_completed', 'Database backup completed');
+ *   logError('backup_failed', 'Database backup failed', ['error' => $error]);
+ */
+use App\Models\ActivityLog;
+
+if (!function_exists('logDatabaseBackup')) {
+    function logDatabaseBackup($filename, $size)
+    {
+        ActivityLog::create([
+            'type' => 'database_backup',
+            'description' => "Database backup created: {$filename}",
+            'meta' => json_encode([
+                'filename' => $filename,
+                'size' => $size
+            ]),
+            'user_id' => auth()->id()
+        ]);
+    }
+}
+
+if (!function_exists('logDatabaseRestore')) {
+    function logDatabaseRestore($filename, $success = true)
+    {
+        ActivityLog::create([
+            'type' => 'database_restore',
+            'description' => $success
+                ? "Database restored: {$filename}"
+                : "Database restore FAILED: {$filename}",
+            'meta' => json_encode([
+                'filename' => $filename,
+                'success' => $success
+            ]),
+            'user_id' => auth()->id()
+        ]);
+    }
+}
+
+if (!function_exists('logActivity')) {
+    function logActivity($type, $message, $meta = [])
+    {
+        ActivityLog::create([
+            'type' => $type,
+            'description' => $message,
+            'meta' => json_encode($meta),
+            'user_id' => auth()->id()
+        ]);
+    }
+}
+
+if (!function_exists('logError')) {
+    function logError($type, $message, $meta = [])
+    {
+        ActivityLog::create([
+            'type' => $type,
+            'description' => $message,
+            'meta' => json_encode($meta),
+            'user_id' => auth()->id()
+        ]);
+    }
+}

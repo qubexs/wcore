@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Document Viewer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #141417;
+    --surface2: #1c1c21;
+    --border: #2a2a32;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e8b0;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --doc-color: #4e9ef7;
+    --xls-color: #43e8b0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Sora', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,13,15,0.8);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(108,99,255,0.4);
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  header span {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-left: 4px;
+  }
+
+  .badge-row {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+    font-weight: 500;
+  }
+
+  .badge.doc { color: var(--doc-color); border-color: var(--doc-color); background: rgba(78,158,247,0.08); }
+  .badge.xls { color: var(--xls-color); border-color: var(--xls-color); background: rgba(67,232,176,0.08); }
+
+  main {
+    position: relative;
+    z-index: 5;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px;
+  }
+
+  /* Drop zone */
+  .drop-zone {
+    width: 100%;
+    max-width: 680px;
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 52px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .drop-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 100%, rgba(108,99,255,0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(108,99,255,0.05);
+    box-shadow: 0 0 40px rgba(108,99,255,0.12);
+  }
+
+  .drop-icon {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(255,101,132,0.2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+    transition: transform 0.25s ease;
+  }
+
+  .drop-zone:hover .drop-icon { transform: translateY(-4px) scale(1.05); }
+
+  .drop-zone h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .drop-zone p {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 300;
+    margin-bottom: 24px;
+  }
+
+  .file-input { display: none; }
+
+  .browse-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.35);
+  }
+
+  .browse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(108,99,255,0.45);
+  }
+
+  .format-hints {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .fmt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  /* Viewer panel */
+  .viewer-panel {
+    display: none;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 32px;
+  }
+
+  .viewer-panel.visible { display: block; animation: fadeUp 0.4s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .file-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+    padding: 14px 20px;
+    border-bottom: none;
+  }
+
+  .file-type-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot-doc { background: var(--doc-color); box-shadow: 0 0 8px var(--doc-color); }
+  .dot-xls { background: var(--xls-color); box-shadow: 0 0 8px var(--xls-color); }
+
+  .file-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .file-size {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .close-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .close-btn:hover { color: var(--text); border-color: var(--accent2); }
+
+  .viewer-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0 0 14px 14px;
+    min-height: 400px;
+    max-height: 72vh;
+    overflow: auto;
+  }
+
+  /* Word doc styles */
+  .doc-body {
+    padding: 40px 48px;
+    background: #fff;
+    color: #1a1a2e;
+    font-family: 'Georgia', serif;
+    font-size: 15px;
+    line-height: 1.8;
+    min-height: 400px;
+  }
+
+  .doc-body h1, .doc-body h2, .doc-body h3 {
+    margin: 1.2em 0 0.5em;
+    font-family: 'Sora', sans-serif;
+    color: #1a1a2e;
+  }
+
+  .doc-body p { margin-bottom: 0.8em; }
+  .doc-body table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  .doc-body td, .doc-body th { border: 1px solid #ddd; padding: 8px 12px; }
+  .doc-body th { background: #f5f5f5; font-weight: 600; }
+
+  /* Sheet tabs */
+  .sheet-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px 0;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .sheet-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 16px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .sheet-tab.active { color: var(--accent3); border-color: var(--accent3); background: rgba(67,232,176,0.06); }
+  .sheet-tab:hover:not(.active) { color: var(--text); }
+
+  /* Excel table */
+  .excel-wrap {
+    overflow: auto;
+    padding: 0;
+  }
+
+  .excel-table {
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    min-width: 100%;
+    white-space: nowrap;
+  }
+
+  .excel-table th {
+    background: var(--surface2);
+    color: var(--accent3);
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    font-weight: 500;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .excel-table td {
+    padding: 7px 16px;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .excel-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .excel-table tr:hover td { background: rgba(108,99,255,0.06); }
+
+  /* Row numbers */
+  .excel-table .row-num {
+    color: var(--muted);
+    font-size: 10px;
+    text-align: right;
+    width: 40px;
+    min-width: 40px;
+    user-select: none;
+  }
+
+  /* Loading */
+  .loading {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .loading.show { display: flex; }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    padding: 32px;
+    text-align: center;
+    color: var(--accent2);
+    font-size: 14px;
+  }
+
+  .error-msg.show { display: block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    padding: 10px 20px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .stats-bar span { display: flex; align-items: center; gap: 5px; }
+  .stats-bar b { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">📄</div>
+  <div>
+    <h1>DocViewer <span>— by YourSite</span></h1>
+  </div>
+  <div class="badge-row">
+    <span class="badge doc">.doc .docx</span>
+    <span class="badge xls">.xls .xlsx</span>
+  </div>
+</header>
+
+<main>
+  <!-- Drop zone -->
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-icon">📂</div>
+    <h2>Drop your document here</h2>
+    <p>Supports Word and Excel files — all rendered right in your browser</p>
+    <button class="browse-btn" onclick="document.getElementById('fileInput').click()">
+      ✦ Browse Files
+    </button>
+    <input type="file" id="fileInput" class="file-input"
+           accept=".doc,.docx,.xls,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+    <div class="format-hints">
+      <span class="fmt">.doc</span>
+      <span class="fmt">.docx</span>
+      <span class="fmt">.xls</span>
+      <span class="fmt">.xlsx</span>
+    </div>
+  </div>
+
+  <!-- Viewer -->
+  <div class="viewer-panel" id="viewerPanel">
+    <div class="file-info-bar" id="fileInfoBar">
+      <div class="file-type-dot" id="fileTypeDot"></div>
+      <span class="file-name" id="fileName">—</span>
+      <span class="file-size" id="fileSize"></span>
+      <button class="close-btn" onclick="closeViewer()" title="Close">✕</button>
+    </div>
+
+    <div class="viewer-content" id="viewerContent">
+      <div class="loading" id="loadingEl">
+        <div class="spinner"></div> Processing document…
+      </div>
+      <div class="error-msg" id="errorEl"></div>
+      <div id="docContainer"></div>
+    </div>
+
+    <div class="stats-bar" id="statsBar" style="display:none"></div>
+  </div>
+</main>
+
+<script>
+  const dropZone    = document.getElementById('dropZone');
+  const fileInput   = document.getElementById('fileInput');
+  const viewerPanel = document.getElementById('viewerPanel');
+  const fileInfoBar = document.getElementById('fileInfoBar');
+  const fileName    = document.getElementById('fileName');
+  const fileSize    = document.getElementById('fileSize');
+  const fileTypeDot = document.getElementById('fileTypeDot');
+  const viewerContent = document.getElementById('viewerContent');
+  const docContainer  = document.getElementById('docContainer');
+  const loadingEl     = document.getElementById('loadingEl');
+  const errorEl       = document.getElementById('errorEl');
+  const statsBar      = document.getElementById('statsBar');
+
+  // Drag & drop
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) processFile(e.target.files[0]);
+  });
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
+  }
+
+  function showLoading() {
+    loadingEl.classList.add('show');
+    errorEl.classList.remove('show');
+    docContainer.innerHTML = '';
+    statsBar.style.display = 'none';
+  }
+
+  function hideLoading() { loadingEl.classList.remove('show'); }
+
+  function showError(msg) {
+    hideLoading();
+    errorEl.textContent = '⚠ ' + msg;
+    errorEl.classList.add('show');
+  }
+
+  function processFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['doc','docx','xls','xlsx'].includes(ext)) {
+      alert('Unsupported file type. Please use .doc, .docx, .xls, or .xlsx');
+      return;
+    }
+
+    fileName.textContent = file.name;
+    fileSize.textContent = formatBytes(file.size);
+
+    const isWord = ['doc','docx'].includes(ext);
+    fileTypeDot.className = 'file-type-dot ' + (isWord ? 'dot-doc' : 'dot-xls');
+
+    viewerPanel.classList.add('visible');
+    showLoading();
+
+    const reader = new FileReader();
+
+    if (ext === 'docx') {
+      reader.onload = e => renderDocx(e.target.result);
+      reader.readAsArrayBuffer(file);
+    } else if (ext === 'doc') {
+      // .doc is legacy binary — try mammoth (works for many .doc files)
+      reader.onload = e => renderDocx(e.target.result, true);
+      reader.readAsArrayBuffer(file);
+    } else if (['xls','xlsx'].includes(ext)) {
+      reader.onload = e => renderExcel(e.target.result, ext);
+      reader.readAsArrayBuffer(file);
+    }
+  }
+
+  function renderDocx(arrayBuffer, isDoc = false) {
+    mammoth.convertToHtml({ arrayBuffer })
+      .then(result => {
+        hideLoading();
+        if (!result.value.trim()) {
+          showError('Document appears empty or could not be parsed.');
+          return;
+        }
+
+        docContainer.innerHTML = `<div class="doc-body">${result.value}</div>`;
+
+        // Word count stat
+        const wordCount = result.value.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+        statsBar.style.display = 'flex';
+        statsBar.innerHTML = `
+          <span>📝 <b>${wordCount.toLocaleString()}</b> words</span>
+          ${result.messages.length ? `<span>⚠ <b>${result.messages.length}</b> warnings</span>` : ''}
+          ${isDoc ? '<span>⚡ Legacy .doc format</span>' : ''}
+        `;
+      })
+      .catch(() => showError('Failed to render Word document. The file may be corrupt or use an unsupported format.'));
+  }
+
+  let workbook = null;
+
+  function renderExcel(arrayBuffer, ext) {
+    try {
+      workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      hideLoading();
+      renderSheet(workbook.SheetNames[0]);
+    } catch (e) {
+      showError('Failed to read Excel file: ' + e.message);
+    }
+  }
+
+  function renderSheet(sheetName) {
+    const sheet = workbook.Sheets[sheetName];
+    const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+    // Build tabs
+    let tabsHtml = workbook.SheetNames.map(name =>
+      `<div class="sheet-tab ${name === sheetName ? 'active' : ''}" onclick="renderSheet('${name.replace(/'/g,"\\'")}')">
+         ${escapeHtml(name)}
+       </div>`
+    ).join('');
+
+    if (data.length === 0) {
+      docContainer.innerHTML = `
+        <div class="sheet-tabs">${tabsHtml}</div>
+        <div style="padding:40px;text-align:center;color:var(--muted);font-size:14px;">Sheet is empty</div>`;
+      return;
+    }
+
+    // Find max cols
+    const maxCols = Math.max(...data.map(r => r.length));
+    const headers = data[0];
+    const rows    = data.slice(1);
+
+    // Header row
+    let thead = '<tr><th class="row-num">#</th>';
+    for (let c = 0; c < maxCols; c++) {
+      thead += `<th>${escapeHtml(String(headers[c] ?? ''))}</th>`;
+    }
+    thead += '</tr>';
+
+    // Data rows
+    let tbody = rows.map((row, i) => {
+      let cells = `<td class="row-num">${i + 1}</td>`;
+      for (let c = 0; c < maxCols; c++) {
+        cells += `<td>${escapeHtml(String(row[c] ?? ''))}</td>`;
+      }
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    docContainer.innerHTML = `
+      <div class="sheet-tabs">${tabsHtml}</div>
+      <div class="excel-wrap">
+        <table class="excel-table">
+          <thead>${thead}</thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      </div>`;
+
+    statsBar.style.display = 'flex';
+    statsBar.innerHTML = `
+      <span>📊 <b>${rows.length.toLocaleString()}</b> rows</span>
+      <span>⬛ <b>${maxCols}</b> columns</span>
+      <span>🗂 <b>${workbook.SheetNames.length}</b> sheet${workbook.SheetNames.length > 1 ? 's' : ''}</span>
+    `;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function closeViewer() {
+    viewerPanel.classList.remove('visible');
+    docContainer.innerHTML = '';
+    fileInput.value = '';
+    workbook = null;
+    statsBar.style.display = 'none';
+  }
+</script>
+</body>
+</html>

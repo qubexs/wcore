@@ -1,0 +1,39 @@
+[
+  {
+    "title": "File Hosting",
+    "route": "filehosting.index",
+    "icon": "fas fa-cloud-upload-alt",
+    "permission": null,
+    "order": 1,
+    "children": [
+      {
+        "title": "Dashboard",
+        "route": "filehosting.index",
+        "icon": "fas fa-tachometer-alt",
+        "permission": null,
+        "order": 0
+      },
+      {
+        "title": "Upload File",
+        "route": "filehosting.files.upload",
+        "icon": "fas fa-upload",
+        "permission": "filehosting.file.upload",
+        "order": 1
+      },
+      {
+        "title": "All Files",
+        "route": "filehosting.files.all",
+        "icon": "fas fa-file",
+        "permission": "filehosting.file.view",
+        "order": 2
+      },
+      {
+        "title": "Settings",
+        "route": "filehosting.settings.index",
+        "icon": "fas fa-cogs",
+        "permission": "filehosting.system.manage_settings",
+        "order": 3
+      }
+    ]
+  }
+]

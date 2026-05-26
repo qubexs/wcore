@@ -1,0 +1,22 @@
+{
+  "name": "Website Monitor Module",
+  "slug": "websitemonitor",
+  "version": "1.0.0",
+  "description": "Monitor the health and uptime of websites and links. Perform HTTP checks, track response times, and get status updates.",
+  "author": "Developer",
+  "routes": true,
+  "installer": "install.php",
+  "uninstaller": "uninstall.php",
+  "features": [
+    "url_monitoring",
+    "http_status_checks",
+    "response_time_tracking",
+    "check_logs",
+    "manual_checks"
+  ],
+  "dependencies": {
+    "php": ">=8.0",
+    "laravel": ">=9.0",
+    "extensions": ["curl"]
+  }
+}
